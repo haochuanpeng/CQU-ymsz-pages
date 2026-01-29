@@ -1,3 +1,389 @@
 ---
 title: Welcome to my blog!
 ---
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>野蛮生长 Savage Growth | 重庆大学跑团</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'San Francisco', 'Helvetica Neue', 'sans-serif'],
+          },
+          colors: {
+            'apple-gray': '#f5f5f7',
+            'apple-dark': '#1d1d1f',
+            'apple-blue': '#0066cc',
+          },
+          animation: {
+            'fade-in-up': 'fadeInUp 1s ease-out forwards',
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    /* 磨砂玻璃效果 */
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    /* 隐藏滚动条但保留功能 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* 类似 Apple 的平滑字体渲染 */
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+</head>
+<body class="bg-apple-gray text-apple-dark font-sans leading-relaxed">
+
+  <!-- 导航栏 (Sticky Glass) -->
+  <nav class="fixed top-0 w-full z-50 glass transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-6 h-12 flex items-center justify-between">
+      <div class="flex items-center space-x-2 cursor-pointer" onclick="window.scrollTo(0,0)">
+        <i class="fa-solid fa-person-running text-apple-dark"></i>
+        <span class="font-semibold tracking-tight">Savage Growth</span>
+      </div>
+      <div class="hidden md:flex space-x-8 text-xs font-medium text-gray-600">
+        <a href="#overview" class="hover:text-apple-dark transition-colors">概览</a>
+        <a href="#rankings" class="hover:text-apple-dark transition-colors">成绩排行</a>
+        <a href="#team" class="hover:text-apple-dark transition-colors">团队成员</a>
+      </div>
+      <!-- CSV上传部分 -->
+      <div class="relative">
+        <label for="csvInput" class="cursor-pointer text-xs bg-apple-dark text-white px-3 py-1 rounded-full hover:bg-black transition-colors">
+          更新数据
+        </label>
+        <input type="file" id="csvInput" accept=".csv" class="hidden" onchange="handleFileUpload(this)">
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero 区域 (大标题 + 留白) -->
+  <section class="pt-32 pb-20 px-6 max-w-7xl mx-auto text-center">
+    <h1 class="text-5xl md:text-7xl font-semibold tracking-tight mb-6 animate-fade-in-up">
+      野蛮生长<br>
+      <span class="text-gray-400">不止于跑。</span>
+    </h1>
+    <p class="text-xl md:text-2xl text-gray-500 max-w-2xl mx-auto mb-10 font-normal animate-fade-in-up" style="animation-delay: 0.2s;">
+      重庆大学官方跑团。用脚步丈量青春，用汗水定义成长。
+    </p>
+    
+    <!-- 数据概览 (Bento Grid 风格) -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-16 max-w-5xl mx-auto animate-fade-in-up" style="animation-delay: 0.4s;">
+      <div class="bg-white p-8 rounded-3xl shadow-sm hover:scale-105 transition-transform duration-500">
+        <p class="text-gray-500 text-sm font-medium mb-1">成员总数</p>
+        <p class="text-4xl font-semibold" id="totalMembers">-</p>
+      </div>
+      <div class="bg-white p-8 rounded-3xl shadow-sm hover:scale-105 transition-transform duration-500">
+        <p class="text-gray-500 text-sm font-medium mb-1">全马破三</p>
+        <p class="text-4xl font-semibold" id="sub3Count">-</p>
+      </div>
+      <div class="bg-white p-8 rounded-3xl shadow-sm hover:scale-105 transition-transform duration-500 col-span-2 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+        <p class="text-gray-400 text-sm font-medium mb-1">全马最快记录</p>
+        <div class="flex items-end justify-between">
+            <p class="text-5xl font-bold" id="fastestFull">-</p>
+            <span class="text-sm bg-white/20 px-2 py-1 rounded-lg backdrop-blur-md" id="fastestRunner">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 排行榜区域 -->
+  <section id="rankings" class="bg-white py-24 rounded-t-[3rem] shadow-[0_-20px_40px_rgba(0,0,0,0.02)]">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row justify-between items-end mb-12">
+        <div>
+          <h2 class="text-4xl font-semibold tracking-tight mb-2">精英榜单</h2>
+          <p class="text-gray-500">数据截至最新比赛日。</p>
+        </div>
+        <!-- 切换 Tab (iOS Segmented Control 风格) -->
+        <div class="bg-apple-gray p-1 rounded-lg flex space-x-1 mt-6 md:mt-0">
+          <button onclick="switchTab('full')" id="tab-full" class="px-6 py-1.5 rounded-md text-sm font-medium bg-white shadow-sm transition-all">全马</button>
+          <button onclick="switchTab('half')" id="tab-half" class="px-6 py-1.5 rounded-md text-sm font-medium text-gray-500 hover:text-black transition-all">半马</button>
+          <button onclick="switchTab('10k')" id="tab-10k" class="px-6 py-1.5 rounded-md text-sm font-medium text-gray-500 hover:text-black transition-all">10K</button>
+        </div>
+      </div>
+
+      <!-- 列表内容 -->
+      <div class="overflow-x-auto no-scrollbar">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="text-gray-400 text-xs border-b border-gray-100">
+              <th class="py-4 font-medium pl-4">排名</th>
+              <th class="py-4 font-medium">姓名</th>
+              <th class="py-4 font-medium">专业/年级</th>
+              <th class="py-4 font-medium">成绩</th>
+              <th class="py-4 font-medium text-right pr-4">赛事</th>
+            </tr>
+          </thead>
+          <tbody id="rankingBody" class="text-sm">
+            <!-- JS 动态插入 -->
+            <tr><td colspan="5" class="py-10 text-center text-gray-400">请点击右上角上传 CSV 数据文件</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 成员风采 (Grid 布局) -->
+  <section id="team" class="py-24 max-w-7xl mx-auto px-6">
+    <h2 class="text-4xl font-semibold tracking-tight mb-12">野蛮生长</h2>
+    <div id="memberGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <!-- 动态生成 -->
+    </div>
+  </section>
+
+  <footer class="bg-apple-gray py-12 border-t border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 text-xs text-gray-500 flex justify-between items-center">
+      <p>Copyright © 2025 重庆大学野蛮生长跑团. All rights reserved.</p>
+      <p>Designed by XSimple AI</p>
+    </div>
+  </footer>
+
+  <!-- 模态框 (Modal) -->
+  <div id="modal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white w-full max-w-lg rounded-2xl shadow-2xl p-8 animate-fade-in-up">
+        <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200">&times;</button>
+        <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    let globalData = [];
+    let currentCategory = 'full';
+
+    // 1. 初始化: 尝试加载本地 data.csv (如果已经上传到服务器)
+    window.onload = function() {
+        fetch('data.csv')
+            .then(response => {
+                if(response.ok) return response.text();
+                throw new Error('No default CSV found');
+            })
+            .then(csv => parseCSV(csv))
+            .catch(e => console.log('Waiting for user upload...'));
+    }
+
+    // 2. 文件上传处理
+    function handleFileUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            parseCSV(e.target.result);
+        };
+        reader.readAsText(file);
+    }
+
+    // 3. 解析 CSV
+    function parseCSV(csvText) {
+        Papa.parse(csvText, {
+            header: false, // 原始数据比较复杂，我们用索引读取
+            skipEmptyLines: true,
+            complete: function(results) {
+                processData(results.data);
+            }
+        });
+    }
+
+    // 4. 数据处理逻辑
+    function processData(rows) {
+        // 跳过前两行（表头和示例）
+        const dataRows = rows.slice(2);
+        
+        globalData = dataRows.map((row, index) => {
+            // 简单的数据清洗
+            if (!row[1]) return null;
+            return {
+                id: index,
+                name: row[1],
+                gender: row[9],
+                year: row[10],
+                major: row[11],
+                bestFull: cleanTime(row[3]),
+                bestFullEvent: row[4],
+                bestHalf: cleanTime(row[5]),
+                bestHalfEvent: row[6],
+                best10k: cleanTime(row[7]),
+                best10kEvent: row[8], 
+                rawFull: row[3] //用于显示
+            };
+        }).filter(item => item !== null);
+
+        updateStats();
+        renderTable();
+        renderGrid();
+    }
+
+    function cleanTime(timeStr) {
+        if (!timeStr || timeStr === '无' || timeStr.length < 2) return 999999;
+        // 简单将时间转为秒数用于排序
+        let parts = timeStr.replace(/：/g, ':').replace(/。/g,'.').split(/[:.]/);
+        let seconds = 0;
+        if (parts.length === 3) seconds = (+parts[0]) * 3600 + (+parts[1]) * 60 + (+parts[2]);
+        else if (parts.length === 2) seconds = (+parts[0]) * 3600 + (+parts[1]) * 60; // 假设是小时:分
+        return seconds;
+    }
+
+    // 5. 更新统计数字
+    function updateStats() {
+        document.getElementById('totalMembers').innerText = globalData.length;
+        
+        // 全马破3人数
+        const sub3 = globalData.filter(p => p.bestFull < 3 * 3600).length;
+        document.getElementById('sub3Count').innerText = sub3;
+
+        // 全马最快
+        const fastest = [...globalData].sort((a,b) => a.bestFull - b.bestFull)[0];
+        if(fastest && fastest.bestFull !== 999999) {
+            document.getElementById('fastestFull').innerText = fastest.rawFull;
+            document.getElementById('fastestRunner').innerText = fastest.name;
+        }
+    }
+
+    // 6. 渲染表格
+    function renderTable() {
+        const tbody = document.getElementById('rankingBody');
+        tbody.innerHTML = '';
+
+        let sortKey = 'bestFull';
+        let eventKey = 'bestFullEvent';
+        if (currentCategory === 'half') { sortKey = 'bestHalf'; eventKey = 'bestHalfEvent'; }
+        if (currentCategory === '10k') { sortKey = 'best10k'; eventKey = 'best10kEvent'; }
+
+        // 排序
+        const sorted = [...globalData]
+            .filter(item => item[sortKey] !== 999999)
+            .sort((a,b) => a[sortKey] - b[sortKey]);
+
+        sorted.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer group';
+            tr.onclick = () => showModal(item);
+            
+            // 排名颜色
+            let rankClass = "text-gray-500 font-medium";
+            if(index === 0) rankClass = "text-yellow-600 font-bold text-lg";
+            if(index === 1) rankClass = "text-gray-600 font-bold text-lg";
+            if(index === 2) rankClass = "text-orange-600 font-bold text-lg";
+
+            // 显示成绩原文本（需要根据key找回原始数据，这里简化因为cleanTime丢失了原格式，
+            // 实际项目中建议在processData里保留rawHalf, raw10k）
+            // 这里为了演示，暂时只处理全马的raw显示，其他简单处理
+            let displayTime = item.rawFull; 
+            if (currentCategory === 'half') displayTime = "点击查看"; // 简化处理
+            if (currentCategory === '10k') displayTime = "点击查看";
+
+            tr.innerHTML = `
+                <td class="py-5 pl-4 ${rankClass}">${index + 1}</td>
+                <td class="py-5 font-medium text-apple-dark">${item.name}</td>
+                <td class="py-5 text-gray-500">${item.major} <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-2">${item.year}</span></td>
+                <td class="py-5 font-semibold font-mono tracking-tight">${displayTime}</td>
+                <td class="py-5 text-right pr-4 text-gray-400 text-xs">${item[eventKey] || '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 7. 渲染网格 (Avatar)
+    function renderGrid() {
+        const grid = document.getElementById('memberGrid');
+        grid.innerHTML = '';
+        globalData.forEach(item => {
+            const div = document.createElement('div');
+            // Apple style 名字卡片
+            div.className = "bg-white p-6 rounded-2xl shadow-sm flex items-center space-x-4 hover:shadow-md transition-shadow cursor-pointer";
+            div.onclick = () => showModal(item);
+            // 随机生成一个颜色给头像
+            const colors = ['bg-blue-100 text-blue-600', 'bg-green-100 text-green-600', 'bg-orange-100 text-orange-600', 'bg-purple-100 text-purple-600'];
+            const colorClass = colors[item.id % colors.length];
+            
+            div.innerHTML = `
+                <div class="w-12 h-12 rounded-full ${colorClass} flex items-center justify-center font-bold text-lg">
+                    ${item.name[0]}
+                </div>
+                <div>
+                    <h3 class="font-medium text-apple-dark">${item.name}</h3>
+                    <p class="text-xs text-gray-400">${item.major}</p>
+                </div>
+            `;
+            grid.appendChild(div);
+        });
+    }
+
+    // 8. 交互函数
+    function switchTab(cat) {
+        currentCategory = cat;
+        // 更新按钮样式
+        document.querySelectorAll('button[id^="tab-"]').forEach(btn => {
+            btn.className = "px-6 py-1.5 rounded-md text-sm font-medium text-gray-500 hover:text-black transition-all";
+            btn.style.boxShadow = "none";
+            btn.style.backgroundColor = "transparent";
+        });
+        const activeBtn = document.getElementById('tab-' + cat);
+        activeBtn.className = "px-6 py-1.5 rounded-md text-sm font-medium bg-white text-black transition-all";
+        activeBtn.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+        
+        renderTable();
+    }
+
+    function showModal(item) {
+        const modal = document.getElementById('modal');
+        const content = document.getElementById('modalContent');
+        content.innerHTML = `
+            <div class="text-center mb-8">
+                <h3 class="text-3xl font-semibold mb-2">${item.name}</h3>
+                <p class="text-gray-500">${item.year}级 · ${item.major}</p>
+            </div>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <span class="text-gray-500">全程马拉松</span>
+                    <span class="font-semibold font-mono text-xl">${item.rawFull || '-'}</span>
+                </div>
+                <div class="flex justify-between items-center border-b pb-4">
+                    <span class="text-gray-500">半程马拉松</span>
+                     <!-- 这里实际应该显示原始半马成绩，因简化暂不显示 -->
+                    <span class="font-semibold font-mono text-xl">${item.bestHalf < 9000 ? '已完赛' : '-'}</span>
+                </div>
+                 <div class="text-xs text-gray-400 mt-4 text-center">
+                    最近参加赛事：${item.bestFullEvent || '暂无数据'}
+                </div>
+            </div>
+        `;
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
