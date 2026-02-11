@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>野蛮生长 · 英雄榜</title>
+    <title>野蛮生长 · 社区</title>
     <style>
         :root {
             --bg-color: #f5f5f7;
@@ -11,10 +11,7 @@
             --text-primary: #1d1d1f;
             --text-secondary: #86868b;
             --accent-blue: #0071e3;
-            --accent-red: #ff3b30;
-            --accent-green: #34c759;
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            --card-hover-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            --accent-orange: #ff9500; /* 应援色 */
         }
 
         body {
@@ -22,338 +19,277 @@
             background-color: var(--bg-color);
             color: var(--text-primary);
             margin: 0;
-            padding: 40px 20px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
         }
 
-        /* 顶部 Hero 区域 */
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-            animation: fadeIn 1s ease-out;
-            max-width: 600px;
-        }
-
-        .hero-logo {
-            width: 120px;
-            height: 120px;
-            border-radius: 28px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.12);
-            object-fit: cover;
-            margin-bottom: 24px;
-            background-color: #fff;
-        }
-
-        h1 {
-            font-size: 48px;
-            font-weight: 700;
-            letter-spacing: -1px;
-            margin: 0 0 10px 0;
-            background: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-            font-size: 20px;
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin-top: 0;
-        }
-
-        /* 搜索框 */
-        .search-wrapper {
-            width: 100%;
-            max-width: 480px;
-            margin-bottom: 40px;
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 16px 24px;
-            font-size: 17px;
-            border: none;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.8);
+        /* 顶部导航 */
+        .nav-container {
+            background: rgba(255,255,255,0.8);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-            color: var(--text-primary);
+            padding: 8px;
+            border-radius: 99px;
+            display: flex;
+            gap: 5px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            padding: 10px 24px;
+            border-radius: 99px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
             transition: all 0.3s ease;
-            box-sizing: border-box;
         }
 
-        .search-input:focus {
-            outline: none;
+        .nav-item.active {
             background: #fff;
-            box-shadow: 0 8px 24px rgba(0,113,227,0.15);
-            transform: scale(1.02);
-        }
-
-        /* 卡片网格 */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-            width: 100%;
-            max-width: 1200px;
-        }
-
-        /* 队员卡片 - Apple 风格 */
-        .card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 28px;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            cursor: default;
-        }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--card-hover-shadow);
-        }
-
-        /* 卡片头部 */
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-
-        .member-name {
-            font-size: 26px;
-            font-weight: 600;
             color: var(--text-primary);
-            letter-spacing: -0.5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .member-meta {
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin-top: 4px;
+        /* 页面容器 */
+        .page-section {
+            display: none; /* 默认隐藏所有 */
+            width: 100%;
+            max-width: 1000px;
+            animation: fadeIn 0.5s ease;
         }
 
-        .badge {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            padding: 4px 8px;
-            border-radius: 6px;
-            background: #f0f0f2;
-            color: var(--text-secondary);
+        .page-section.active {
+            display: block; /* 激活显示 */
         }
 
-        /* 成绩展示区 */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-            margin-top: auto;
-            border-top: 1px solid #f0f0f2;
-            padding-top: 16px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .stat-value {
-            font-size: 16px;
-            font-weight: 600;
-            font-variant-numeric: tabular-nums; /* 数字等宽对齐 */
-        }
-
-        /* 成绩颜色标记 */
-        .val-10k { color: var(--accent-green); }
-        .val-half { color: var(--accent-blue); }
-        .val-full { color: var(--accent-red); }
-        .val-none { color: #d2d2d7; font-weight: 400; font-size: 14px; }
-
-        /* 加载动画 */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .loading-text {
-            color: var(--text-secondary);
-            margin-top: 40px;
-            font-size: 16px;
+        /* ---------- 英雄榜样式 (之前的) ---------- */
+        .hero-header { text-align: center; margin-bottom: 40px; }
+        .hero-logo { width: 100px; height: 100px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        h1 { margin: 0; font-size: 32px; font-weight: 700; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #fff; padding: 24px; border-radius: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .member-name { font-size: 20px; font-weight: 600; }
+        .member-meta { font-size: 13px; color: var(--text-secondary); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding-top: 15px; border-top: 1px solid #eee; }
+        .stat-item { text-align: center; }
+        .stat-val { font-weight: 600; font-size: 15px; }
+        .stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
+        .col-red { color: #ff3b30; } .col-blue { color: #0071e3; } .col-green { color: #34c759; }
+
+        /* ---------- 应援墙样式 (新增的) ---------- */
+        .wall-header {
+            text-align: center; margin-bottom: 30px;
+        }
+        .wall-btn {
+            background: var(--accent-blue);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 99px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0,113,227,0.3);
+            transition: transform 0.2s;
+        }
+        .wall-btn:hover { transform: scale(1.05); }
+
+        .message-grid {
+            column-count: 2; /* 瀑布流布局 */
+            column-gap: 20px;
         }
         
-        .error-box {
-            background: #fff0f0;
-            color: var(--accent-red);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: none;
-            text-align: left;
-            border: 1px solid rgba(255, 59, 48, 0.2);
-            font-size: 14px;
+        @media (max-width: 600px) {
+            .message-grid { column-count: 1; }
         }
+
+        .msg-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            break-inside: avoid;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .msg-tag {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .tag-cheer { background: #fff5e5; color: var(--accent-orange); } /* 加油 */
+        .tag-ask { background: #e5f1ff; color: var(--accent-blue); }   /* 提问 */
+        .tag-love { background: #ffe5e5; color: #ff3b30; }             /* 暖心 */
+
+        .msg-content {
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .msg-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .empty-tip { text-align: center; color: var(--text-secondary); margin-top: 50px; }
 
     </style>
 </head>
 <body>
 
-    <header>
-        <!-- 使用 raw.githubusercontent 确保图片能够直接加载 -->
-        <img src="https://github.com/haochuanpeng/CQU-ymsz-pages/blob/main/mmexport1765102007054.jpg" alt="Logo" class="hero-logo" onerror="this.style.display='none'">
-        <h1>野蛮生长</h1>
-        <p class="subtitle">重庆大学跑团 · 成员档案</p>
-    </header>
-
-    <div id="error-msg" class="error-box"></div>
-
-    <div class="search-wrapper">
-        <input type="text" id="searchInput" class="search-input" placeholder="搜索姓名、专业或入学年份..." onkeyup="filterMembers()">
+    <!-- 顶部开关 -->
+    <div class="nav-container">
+        <div class="nav-item active" onclick="switchTab('hero')">英雄榜</div>
+        <div class="nav-item" onclick="switchTab('wall')">应援留言</div>
     </div>
 
-    <div class="grid" id="memberGrid">
-        <div class="loading-text">正在从云端读取 CSV 数据...</div>
+    <!-- 页面1：英雄榜 (Member List) -->
+    <div id="page-hero" class="page-section active">
+        <div class="hero-header">
+            <img src="https://raw.githubusercontent.com/haochuanpeng/CQU-ymsz-pages/main/TBRC.jpg" class="hero-logo" onerror="this.style.display='none'">
+            <h1>野蛮生长 · 成员档案</h1>
+        </div>
+        <div class="grid" id="memberGrid">
+            <div class="empty-tip">正在读取 data.csv ...</div>
+        </div>
+    </div>
+
+    <!-- 页面2：应援墙 (Forum Wall) -->
+    <div id="page-wall" class="page-section">
+        <div class="wall-header">
+            <h1 style="font-size: 28px; margin-bottom: 10px;">CQU 跑友留言板</h1>
+            <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 20px;">只要还在跑，我们就永远年轻。</p>
+            
+            <!-- 这里可以放问卷星/金数据链接 -->
+            <a href="YOUR_FORM_LINK_HERE" target="_blank" class="wall-btn">✍️ 我要留言 (投稿)</a>
+        </div>
+        
+        <div class="message-grid" id="messageGrid">
+            <div class="empty-tip">正在读取 messages.csv ...</div>
+        </div>
     </div>
 
     <script>
-        const CSV_URL = 'data.csv';
-
-        // 页面初始化
-        window.onload = () => {
-            fetchData();
+        // 初始化
+        window.onload = function() {
+            loadMembers();
+            loadMessages();
         };
 
-        // 读取数据
-        async function fetchData() {
+        // 切换标签页
+        function switchTab(tabName) {
+            // 移除所有 active
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+
+            // 激活当前
+            if(tabName === 'hero') {
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+                document.getElementById('page-hero').classList.add('active');
+            } else {
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+                document.getElementById('page-wall').classList.add('active');
+            }
+        }
+
+        // --- 逻辑1：加载队员 (data.csv) ---
+        async function loadMembers() {
             try {
-                const response = await fetch(CSV_URL);
-                if (!response.ok) {
-                    throw new Error(`无法读取文件 (Status: ${response.status})`);
-                }
-                const text = await response.text();
-                parseAndRender(text);
-            } catch (error) {
+                const res = await fetch('data.csv');
+                if(!res.ok) throw new Error("404");
+                const text = await res.text();
                 const container = document.getElementById('memberGrid');
-                const errorBox = document.getElementById('error-msg');
-                
                 container.innerHTML = '';
-                errorBox.style.display = 'block';
-                errorBox.innerHTML = `
-                    <strong>数据加载失败</strong><br/><br/>
-                    1. 请确保 data.csv 已上传到仓库。<br/>
-                    2. 如果您是直接双击打开 index.html，浏览器会拦截数据读取。请将代码上传至 <strong>GitHub Pages</strong> 查看效果。<br/>
-                    <br/>技术详情: ${error.message}
-                `;
-            }
-        }
-
-        // 解析 CSV 并渲染
-        function parseAndRender(csvText) {
-            const rows = csvText.split('\n');
-            const container = document.getElementById('memberGrid');
-            container.innerHTML = ''; // 清空加载提示
-
-            let count = 0;
-
-            // 从第1行开始（跳过第0行表头）
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i].trim();
-                if (!row) continue;
-
-                // 处理CSV中的逗号
-                const cols = row.split(',');
-
-                // 根据您提供的CSV结构映射字段
-                // 1:姓名, 3:全马, 5:半马, 7:10K, 9:性别, 10:年份, 11:专业
-                const name = cols[1]?.trim() || '未知';
-                const bestFull = cleanTime(cols[3]);
-                const bestHalf = cleanTime(cols[5]);
-                const best10k = cleanTime(cols[7]);
-                const gender = cols[9]?.trim() || '';
-                const year = cols[10]?.trim() || '';
-                const major = cols[11]?.trim() || '';
-
-                if (name === '姓名') continue; // 二次防御表头
-
-                const cardHTML = `
-                    <div class="card" data-search="${name} ${major} ${year}">
-                        <div class="card-header">
-                            <div>
-                                <div class="member-name">${name}</div>
-                                <div class="member-meta">${gender} · ${year}级 ${major}</div>
-                            </div>
-                            <div class="badge">NO.${cols[0]}</div>
-                        </div>
-                        
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <div class="stat-label">10公里</div>
-                                <div class="stat-value ${getValueClass(best10k, 'val-10k')}">${best10k}</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-label">半程马拉松</div>
-                                <div class="stat-value ${getValueClass(bestHalf, 'val-half')}">${bestHalf}</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-label">全程马拉松</div>
-                                <div class="stat-value ${getValueClass(bestFull, 'val-full')}">${bestFull}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
                 
-                container.insertAdjacentHTML('beforeend', cardHTML);
-                count++;
-            }
-
-            if (count === 0) {
-                container.innerHTML = '<div class="loading-text">CSV 文件为空或格式不正确。</div>';
-            }
+                const rows = text.split('\n').slice(1); // 去表头
+                rows.forEach(row => {
+                    if(!row.trim()) return;
+                    const c = row.split(',');
+                    // 1:姓名, 3:全马, 5:半马, 7:10K, 9:性别, 10:年, 11:专业
+                    const html = `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="member-name">${c[1]}</span>
+                            <span class="member-meta">${c[10]}级 · ${c[11]}</span>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item"><div class="stat-label">10K</div><div class="stat-val col-green">${c[7]||'-'}</div></div>
+                            <div class="stat-item"><div class="stat-label">Half</div><div class="stat-val col-blue">${c[5]||'-'}</div></div>
+                            <div class="stat-item"><div class="stat-label">Full</div><div class="stat-val col-red">${c[3]||'-'}</div></div>
+                        </div>
+                    </div>`;
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+            } catch(e) { console.log('Member CSV missing'); }
         }
 
-        // 简单的辅助函数
-        function cleanTime(timeStr) {
-            if (!timeStr || timeStr.trim() === '无' || timeStr.trim() === '') {
-                return '-';
+        // --- 逻辑2：加载留言 (messages.csv) ---
+        async function loadMessages() {
+            try {
+                const res = await fetch('messages.csv');
+                if(!res.ok) throw new Error("404");
+                const text = await res.text();
+                const container = document.getElementById('messageGrid');
+                container.innerHTML = '';
+
+                const rows = text.split('\n').slice(1);
+                // 倒序显示（最新的在最上面）
+                rows.reverse().forEach(row => {
+                    if(!row.trim()) return;
+                    // 解析 CSV (注意：如果内容里有逗号，这里的简单 split 会有问题，建议内容不要含英文逗号)
+                    const c = row.split(',');
+                    // 假设CSV结构: id, name, content, time, tag
+                    
+                    if(c.length < 3) return;
+
+                    const name = c[1];
+                    const content = c[2];
+                    const time = c[3];
+                    const tag = c[4] ? c[4].trim() : '加油';
+
+                    // 根据标签决定颜色类名
+                    let tagClass = 'tag-cheer';
+                    if(tag === '提问') tagClass = 'tag-ask';
+                    if(tag === '暖心' || tag === '膜拜') tagClass = 'tag-love';
+
+                    const html = `
+                    <div class="msg-card">
+                        <span class="msg-tag ${tagClass}"># ${tag}</span>
+                        <div class="msg-content">${content}</div>
+                        <div class="msg-footer">
+                            <span>@ ${name}</span>
+                            <span>${time}</span>
+                        </div>
+                    </div>`;
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+            } catch(e) {
+                document.getElementById('messageGrid').innerHTML = '<div class="empty-tip">还没有留言，快去上传 messages.csv 吧！</div>';
             }
-            return timeStr.trim();
-        }
-
-        function getValueClass(timeVal, activeClass) {
-            return timeVal === '-' ? 'val-none' : activeClass;
-        }
-
-        // 搜索过滤功能
-        function filterMembers() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const cards = document.querySelectorAll('.card');
-
-            cards.forEach(card => {
-                const searchData = card.getAttribute('data-search').toLowerCase();
-                if (searchData.includes(input)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
         }
     </script>
 </body>
