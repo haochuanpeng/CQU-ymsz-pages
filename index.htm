@@ -1,584 +1,296 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>重庆大学野蛮生长跑团</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#1E40AF',
-            secondary: '#3B82F6',
-            accent: '#F59E0B',
-            gold: '#FFD700',
-            silver: '#C0C0C0',
-            bronze: '#CD7F32',
-            dark: '#1E293B',
-            light: '#F8FAFC'
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>野蛮生长 · 社区</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f7;
+            --card-bg: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --accent-blue: #0071e3;
+            --accent-orange: #ff9500; /* 应援色 */
         }
-      }
-    }
-  </script>
-  
-  <style>
-    .card-hover {
-      transition: all 0.3s ease;
-    }
-    .card-hover:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    }
-    .tab-active {
-      border-bottom: 3px solid #1E40AF;
-      color: #1E40AF;
-      font-weight: 600;
-    }
-    .modal-overlay {
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-    }
-    .rank-badge {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: white; }
-    .rank-2 { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: white; }
-    .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); color: white; }
-    .rank-other { background: #E5E7EB; color: #374151; }
-    
-    .loading-spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #1E40AF;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 顶部导航 */
+        .nav-container {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(20px);
+            padding: 8px;
+            border-radius: 99px;
+            display: flex;
+            gap: 5px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            padding: 10px 24px;
+            border-radius: 99px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            background: #fff;
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* 页面容器 */
+        .page-section {
+            display: none; /* 默认隐藏所有 */
+            width: 100%;
+            max-width: 1000px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page-section.active {
+            display: block; /* 激活显示 */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---------- 英雄榜样式 (之前的) ---------- */
+        .hero-header { text-align: center; margin-bottom: 40px; }
+        .hero-logo { width: 100px; height: 100px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        h1 { margin: 0; font-size: 32px; font-weight: 700; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #fff; padding: 24px; border-radius: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .member-name { font-size: 20px; font-weight: 600; }
+        .member-meta { font-size: 13px; color: var(--text-secondary); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding-top: 15px; border-top: 1px solid #eee; }
+        .stat-item { text-align: center; }
+        .stat-val { font-weight: 600; font-size: 15px; }
+        .stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
+        .col-red { color: #ff3b30; } .col-blue { color: #0071e3; } .col-green { color: #34c759; }
+
+        /* ---------- 应援墙样式 (新增的) ---------- */
+        .wall-header {
+            text-align: center; margin-bottom: 30px;
+        }
+        .wall-btn {
+            background: var(--accent-blue);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 99px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0,113,227,0.3);
+            transition: transform 0.2s;
+        }
+        .wall-btn:hover { transform: scale(1.05); }
+
+        .message-grid {
+            column-count: 2; /* 瀑布流布局 */
+            column-gap: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .message-grid { column-count: 1; }
+        }
+
+        .msg-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            break-inside: avoid;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .msg-tag {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .tag-cheer { background: #fff5e5; color: var(--accent-orange); } /* 加油 */
+        .tag-ask { background: #e5f1ff; color: var(--accent-blue); }   /* 提问 */
+        .tag-love { background: #ffe5e5; color: #ff3b30; }             /* 暖心 */
+
+        .msg-content {
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .msg-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .empty-tip { text-align: center; color: var(--text-secondary); margin-top: 50px; }
+
+    </style>
 </head>
-<body class="bg-gray-50 text-dark min-h-screen">
-  <!-- 顶部导航 -->
-  <header class="sticky top-0 z-40 bg-white shadow-sm">
-    <div class="container mx-auto px-4 py-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <i class="fa fa-bolt text-white text-xl"></i>
-          </div>
-          <div>
-            <h1 class="text-xl font-bold text-primary">野蛮生长跑团</h1>
-            <p class="text-xs text-gray-500">重庆大学</p>
-          </div>
-        </div>
-        <nav class="hidden md:flex space-x-6">
-          <a href="#rankings" class="text-gray-600 hover:text-primary transition-colors">成绩排名</a>
-          <a href="#members" class="text-gray-600 hover:text-primary transition-colors">全部成员</a>
-        </nav>
-      </div>
+<body>
+
+    <!-- 顶部开关 -->
+    <div class="nav-container">
+        <div class="nav-item active" onclick="switchTab('hero')">英雄榜</div>
+        <div class="nav-item" onclick="switchTab('wall')">应援留言</div>
     </div>
-  </header>
 
-  <!-- 主内容区 -->
-  <main class="container mx-auto px-4 py-8">
-    <!-- 文件上传区域 -->
-    <section class="mb-8 bg-white rounded-xl shadow-sm p-6">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 class="text-lg font-semibold mb-1">数据导入</h2>
-          <p class="text-sm text-gray-500">上传CSV文件以加载跑团成绩数据</p>
+    <!-- 页面1：英雄榜 (Member List) -->
+    <div id="page-hero" class="page-section active">
+        <div class="hero-header">
+            <img src="https://raw.githubusercontent.com/haochuanpeng/CQU-ymsz-pages/main/TBRC.jpg" class="hero-logo" onerror="this.style.display='none'">
+            <h1>野蛮生长 · 成员档案</h1>
         </div>
-        <div class="flex items-center gap-4">
-          <label class="cursor-pointer bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
-            <i class="fa fa-upload"></i>
-            <span>选择CSV文件</span>
-            <input type="file" id="csvFile" accept=".csv" class="hidden">
-          </label>
-          <button id="loadSample" class="text-primary hover:text-secondary transition-colors text-sm underline">
-            加载示例数据
-          </button>
+        <div class="grid" id="memberGrid">
+            <div class="empty-tip">正在读取 data.csv ...</div>
         </div>
-      </div>
-      <div id="fileInfo" class="mt-4 text-sm text-gray-600 hidden">
-        <i class="fa fa-check-circle text-green-500 mr-2"></i>
-        <span id="fileName"></span> - 已加载 <span id="memberCount"></span> 名成员数据
-      </div>
-    </section>
-
-    <!-- 统计卡片 -->
-    <section id="stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      <div class="bg-white rounded-xl shadow-sm p-6 card-hover">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 mb-1">总成员</p>
-            <p id="statTotal" class="text-2xl font-bold text-primary">--</p>
-          </div>
-          <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <i class="fa fa-users text-primary text-xl"></i>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl shadow-sm p-6 card-hover">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 mb-1">全马最佳</p>
-            <p id="statFullBest" class="text-2xl font-bold text-accent">--</p>
-          </div>
-          <div class="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
-            <i class="fa fa-trophy text-accent text-xl"></i>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl shadow-sm p-6 card-hover">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 mb-1">半马最佳</p>
-            <p id="statHalfBest" class="text-2xl font-bold text-secondary">--</p>
-          </div>
-          <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center">
-            <i class="fa fa-flag-checkered text-secondary text-xl"></i>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl shadow-sm p-6 card-hover">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 mb-1">10K最佳</p>
-            <p id="stat10kBest" class="text-2xl font-bold text-green-600">--</p>
-          </div>
-          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-            <i class="fa fa-clock-o text-green-600 text-xl"></i>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 排名区域 -->
-    <section id="rankings" class="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-      <div class="p-6 border-b">
-        <h2 class="text-xl font-bold">成绩排名</h2>
-        <p class="text-sm text-gray-500 mt-1">点击队员行可查看详细信息</p>
-      </div>
-      
-      <!-- 标签切换 -->
-      <div class="flex border-b">
-        <button class="tab-btn tab-active flex-1 py-4 text-center transition-colors" data-tab="full">
-          <i class="fa fa-road mr-2"></i>全程马拉松
-        </button>
-        <button class="tab-btn flex-1 py-4 text-center text-gray-500 hover:text-primary transition-colors" data-tab="half">
-          <i class="fa fa-map-marker mr-2"></i>半程马拉松
-        </button>
-        <button class="tab-btn flex-1 py-4 text-center text-gray-500 hover:text-primary transition-colors" data-tab="10k">
-          <i class="fa fa-flash mr-2"></i>10公里
-        </button>
-      </div>
-
-      <!-- 搜索框 -->
-      <div class="p-4 border-b bg-gray-50">
-        <div class="relative max-w-md">
-          <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-          <input type="text" id="searchInput" placeholder="搜索队员姓名..." 
-                 class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50">
-        </div>
-      </div>
-
-      <!-- 排名表格 -->
-      <div id="rankingContent" class="overflow-x-auto">
-        <div class="p-12 text-center text-gray-500">
-          <i class="fa fa-cloud-upload text-4xl mb-4"></i>
-          <p>请上传CSV文件或加载示例数据</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 全部成员 -->
-    <section id="members" class="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div class="p-6 border-b">
-        <h2 class="text-xl font-bold">全部成员</h2>
-        <p class="text-sm text-gray-500 mt-1">跑团所有注册成员列表</p>
-      </div>
-      <div id="memberGrid" class="p-6">
-        <div class="text-center text-gray-500 py-8">
-          <i class="fa fa-users text-4xl mb-4"></i>
-          <p>请上传CSV文件或加载示例数据</p>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- 队员详情模态框 -->
-  <div id="memberModal" class="fixed inset-0 z-50 hidden">
-    <div class="modal-overlay absolute inset-0" id="modalOverlay"></div>
-    <div class="absolute inset-0 flex items-center justify-center p-4">
-      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
-        <button id="closeModal" class="absolute right-4 top-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-          <i class="fa fa-times text-gray-600"></i>
-        </button>
-        <div id="modalContent" class="p-6">
-          <!-- 动态填充 -->
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- 加载提示 -->
-  <div id="loadingOverlay" class="fixed inset-0 z-50 bg-white/80 flex items-center justify-center hidden">
-    <div class="text-center">
-      <div class="loading-spinner mx-auto mb-4"></div>
-      <p class="text-gray-600">正在加载数据...</p>
-    </div>
-  </div>
-
-  <script>
-    // 全局数据存储
-    let membersData = [];
-    let currentTab = 'full';
-
-    // 时间转换为秒数（用于排序）
-    function timeToSeconds(timeStr) {
-      if (!timeStr || timeStr === '无' || timeStr === '' || timeStr === 'null') return Infinity;
-      
-      // 清理字符串
-      timeStr = String(timeStr).trim();
-      
-      // 处理各种格式
-      // 格式: 2:21:00, 2.21.00, 2:21, 1:23:22, 38:13:00 等
-      let parts;
-      
-      if (timeStr.includes(':')) {
-        parts = timeStr.split(':').map(p => parseFloat(p) || 0);
-      } else if (timeStr.includes('.')) {
-        parts = timeStr.split('.').map(p => parseFloat(p) || 0);
-      } else {
-        return Infinity;
-      }
-      
-      if (parts.length === 3) {
-        return parts[0] * 3600 + parts[1] * 60 + parts[2];
-      } else if (parts.length === 2) {
-        // 判断是 小时:分钟 还是 分钟:秒
-        if (parts[0] < 10) {
-          // 可能是 小时:分钟 格式 (如 2:21 表示 2小时21分)
-          return parts[0] * 3600 + parts[1] * 60;
-        } else {
-          // 可能是 分钟:秒 格式
-          return parts[0] * 60 + parts[1];
-        }
-      }
-      
-      return Infinity;
-    }
-
-    // 格式化时间显示
-    function formatTime(timeStr) {
-      if (!timeStr || timeStr === '无' || timeStr === '' || timeStr === 'null') return '--';
-      return String(timeStr).trim();
-    }
-
-    // 解析CSV数据
-    function parseCSVData(results) {
-      const data = results.data;
-      if (data.length < 3) return []; // 至少需要表头和数据行
-      
-      const members = [];
-      
-      // 从第3行开始是实际数据（第1行是表头，第2行是示例）
-      for (let i = 2; i < data.length; i++) {
-        const row = data[i];
-        if (!row || !row[1] || row[1].trim() === '' || row[1] === 'XXX') continue;
+    <!-- 页面2：应援墙 (Forum Wall) -->
+    <div id="page-wall" class="page-section">
+        <div class="wall-header">
+            <h1 style="font-size: 28px; margin-bottom: 10px;">CQU 跑友留言板</h1>
+            <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 20px;">只要还在跑，我们就永远年轻。</p>
+            
+            <!-- 这里可以放问卷星/金数据链接 -->
+            <a href="YOUR_FORM_LINK_HERE" target="_blank" class="wall-btn">✍️ 我要留言 (投稿)</a>
+        </div>
         
-        const member = {
-          id: row[0] || i,
-          name: row[1] || '',
-          sponsorType: row[2] || '',
-          bestFull: row[3] || '',
-          bestFullEvent: row[4] || '',
-          bestHalf: row[5] || '',
-          bestHalfEvent: row[6] || '',
-          best10k: row[7] || '',
-          best10kEvent: row[8] || '',
-          gender: row[9] || '',
-          enrollYear: row[10] || '',
-          major: row[11] || '',
-          phone: row[12] || '',
-          recent1Result: row[13] || '',
-          recent1Event: row[14] || '',
-          recent1Date: row[15] || '',
-          recent2Result: row[16] || '',
-          recent2Event: row[17] || '',
-          recent2Date: row[18] || '',
-          recent3Result: row[19] || '',
-          recent3Event: row[20] || '',
-          recent3Date: row[21] || ''
+        <div class="message-grid" id="messageGrid">
+            <div class="empty-tip">正在读取 messages.csv ...</div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化
+        window.onload = function() {
+            loadMembers();
+            loadMessages();
         };
-        
-        members.push(member);
-      }
-      
-      return members;
-    }
 
-    // 更新统计数据
-    function updateStats() {
-      document.getElementById('statTotal').textContent = membersData.length;
-      
-      // 全马最佳
-      const fullTimes = membersData
-        .map(m => ({ time: m.bestFull, seconds: timeToSeconds(m.bestFull) }))
-        .filter(t => t.seconds !== Infinity)
-        .sort((a, b) => a.seconds - b.seconds);
-      document.getElementById('statFullBest').textContent = fullTimes.length > 0 ? formatTime(fullTimes[0].time) : '--';
-      
-      // 半马最佳
-      const halfTimes = membersData
-        .map(m => ({ time: m.bestHalf, seconds: timeToSeconds(m.bestHalf) }))
-        .filter(t => t.seconds !== Infinity)
-        .sort((a, b) => a.seconds - b.seconds);
-      document.getElementById('statHalfBest').textContent = halfTimes.length > 0 ? formatTime(halfTimes[0].time) : '--';
-      
-      // 10K最佳
-      const tenKTimes = membersData
-        .map(m => ({ time: m.best10k, seconds: timeToSeconds(m.best10k) }))
-        .filter(t => t.seconds !== Infinity)
-        .sort((a, b) => a.seconds - b.seconds);
-      document.getElementById('stat10kBest').textContent = tenKTimes.length > 0 ? formatTime(tenKTimes[0].time) : '--';
-    }
+        // 切换标签页
+        function switchTab(tabName) {
+            // 移除所有 active
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
 
-    // 获取排名徽章样式
-    function getRankBadge(rank) {
-      if (rank === 1) return 'rank-1';
-      if (rank === 2) return 'rank-2';
-      if (rank === 3) return 'rank-3';
-      return 'rank-other';
-    }
+            // 激活当前
+            if(tabName === 'hero') {
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+                document.getElementById('page-hero').classList.add('active');
+            } else {
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+                document.getElementById('page-wall').classList.add('active');
+            }
+        }
 
-    // 渲染排名表格
-    function renderRankings(searchTerm = '') {
-      let sortedData;
-      let timeField, eventField;
-      
-      switch(currentTab) {
-        case 'full':
-          timeField = 'bestFull';
-          eventField = 'bestFullEvent';
-          break;
-        case 'half':
-          timeField = 'bestHalf';
-          eventField = 'bestHalfEvent';
-          break;
-        case '10k':
-          timeField = 'best10k';
-          eventField = 'best10kEvent';
-          break;
-      }
-      
-      // 过滤有成绩的成员
-      sortedData = membersData
-        .filter(m => timeToSeconds(m[timeField]) !== Infinity)
-        .filter(m => !searchTerm || m.name.toLowerCase().includes(searchTerm.toLowerCase()))
-        .map(m => ({
-          ...m,
-          sortSeconds: timeToSeconds(m[timeField])
-        }))
-        .sort((a, b) => a.sortSeconds - b.sortSeconds);
-      
-      const container = document.getElementById('rankingContent');
-      
-      if (sortedData.length === 0) {
-        container.innerHTML = `
-          <div class="p-12 text-center text-gray-500">
-            <i class="fa fa-search text-4xl mb-4"></i>
-            <p>暂无符合条件的数据</p>
-          </div>
-        `;
-        return;
-      }
-      
-      let html = `
-        <table class="w-full">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 w-20">排名</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">姓名</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">性别</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">最佳成绩</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">赛事</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">专业</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-      
-      sortedData.forEach((member, index) => {
-        const rank = index + 1;
-        html += `
-          <tr class="border-b hover:bg-blue-50 cursor-pointer transition-colors" onclick="showMemberDetail('${member.id}')">
-            <td class="px-4 py-4">
-              <span class="rank-badge ${getRankBadge(rank)}">${rank}</span>
-            </td>
-            <td class="px-4 py-4 font-medium">${member.name}</td>
-            <td class="px-4 py-4">
-              <span class="px-2 py-1 rounded text-xs ${member.gender === '男' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}">
-                ${member.gender || '--'}
-              </span>
-            </td>
-            <td class="px-4 py-4 font-semibold text-accent">${formatTime(member[timeField])}</td>
-            <td class="px-4 py-4 text-sm text-gray-600">${member[eventField] || '--'}</td>
-            <td class="px-4 py-4 text-sm text-gray-600">${member.major || '--'}</td>
-          </tr>
-        `;
-      });
-      
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
+        // --- 逻辑1：加载队员 (data.csv) ---
+        async function loadMembers() {
+            try {
+                const res = await fetch('data.csv');
+                if(!res.ok) throw new Error("404");
+                const text = await res.text();
+                const container = document.getElementById('memberGrid');
+                container.innerHTML = '';
+                
+                const rows = text.split('\n').slice(1); // 去表头
+                rows.forEach(row => {
+                    if(!row.trim()) return;
+                    const c = row.split(',');
+                    // 1:姓名, 3:全马, 5:半马, 7:10K, 9:性别, 10:年, 11:专业
+                    const html = `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="member-name">${c[1]}</span>
+                            <span class="member-meta">${c[10]}级 · ${c[11]}</span>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item"><div class="stat-label">10K</div><div class="stat-val col-green">${c[7]||'-'}</div></div>
+                            <div class="stat-item"><div class="stat-label">Half</div><div class="stat-val col-blue">${c[5]||'-'}</div></div>
+                            <div class="stat-item"><div class="stat-label">Full</div><div class="stat-val col-red">${c[3]||'-'}</div></div>
+                        </div>
+                    </div>`;
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+            } catch(e) { console.log('Member CSV missing'); }
+        }
 
-    // 渲染成员网格
-    function renderMemberGrid() {
-      const container = document.getElementById('memberGrid');
-      
-      if (membersData.length === 0) {
-        container.innerHTML = `
-          <div class="text-center text-gray-500 py-8">
-            <i class="fa fa-users text-4xl mb-4"></i>
-            <p>请上传CSV文件或加载示例数据</p>
-          </div>
-        `;
-        return;
-      }
-      
-      let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">';
-      
-      membersData.forEach(member => {
-        html += `
-          <div class="bg-gray-50 rounded-lg p-4 card-hover cursor-pointer" onclick="showMemberDetail('${member.id}')">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <i class="fa fa-user text-primary"></i>
-              </div>
-              <div>
-                <p class="font-medium">${member.name}</p>
-                <p class="text-xs text-gray-500">${member.enrollYear || '--'}级 ${member.gender || ''}</p>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-      
-      html += '</div>';
-      container.innerHTML = html;
-    }
+        // --- 逻辑2：加载留言 (messages.csv) ---
+        async function loadMessages() {
+            try {
+                const res = await fetch('messages.csv');
+                if(!res.ok) throw new Error("404");
+                const text = await res.text();
+                const container = document.getElementById('messageGrid');
+                container.innerHTML = '';
 
-    // 显示成员详情
-    function showMemberDetail(memberId) {
-      const member = membersData.find(m => String(m.id) === String(memberId));
-      if (!member) return;
-      
-      const modal = document.getElementById('memberModal');
-      const content = document.getElementById('modalContent');
-      
-      content.innerHTML = `
-        <div class="text-center mb-6">
-          <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <i class="fa fa-user text-primary text-3xl"></i>
-          </div>
-          <h3 class="text-2xl font-bold">${member.name}</h3>
-          <p class="text-gray-500">${member.enrollYear || '--'}级 · ${member.major || '--'}</p>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-sm text-gray-500 mb-1">性别</p>
-            <p class="font-medium">${member.gender || '--'}</p>
-          </div>
-          <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-sm text-gray-500 mb-1">联系电话</p>
-            <p class="font-medium">${member.phone || '--'}</p>
-          </div>
-        </div>
-        
-        <div class="mb-6">
-          <h4 class="font-semibold mb-3 flex items-center">
-            <i class="fa fa-trophy text-accent mr-2"></i>个人最佳成绩
-          </h4>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div class="border rounded-lg p-4">
-              <p class="text-xs text-gray-500 mb-1">全程马拉松</p>
-              <p class="text-lg font-bold text-primary">${formatTime(member.bestFull)}</p>
-              <p class="text-xs text-gray-400 mt-1">${member.bestFullEvent || '--'}</p>
-            </div>
-            <div class="border rounded-lg p-4">
-              <p class="text-xs text-gray-500 mb-1">半程马拉松</p>
-              <p class="text-lg font-bold text-secondary">${formatTime(member.bestHalf)}</p>
-              <p class="text-xs text-gray-400 mt-1">${member.bestHalfEvent || '--'}</p>
-            </div>
-            <div class="border rounded-lg p-4">
-              <p class="text-xs text-gray-500 mb-1">10公里</p>
-              <p class="text-lg font-bold text-green-600">${formatTime(member.best10k)}</p>
-              <p class="text-xs text-gray-400 mt-1">${member.best10kEvent || '--'}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div>
-          <h4 class="font-semibold mb-3 flex items-center">
-            <i class="fa fa-calendar text-primary mr-2"></i>近期比赛成绩
-          </h4>
-          <div class="space-y-3">
-            ${member.recent1Result ? `
-              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p class="font-medium">${member.recent1Event || '--'}</p>
-                  <p class="text-xs text-gray-500">${member.recent1Date || '--'}</p>
-                </div>
-                <span class="font-semibold text-primary">${member.recent1Result}</span>
-              </div>
-            ` : ''}
-            ${member.recent2Result ? `
-              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p class="font-medium">${member.recent2Event || '--'}</p>
-                  <p class="text-xs text-gray-500">${member.recent2Date || '--'}</p>
-                </div>
-                <span class="font-semibold text-primary">${member.recent2Result}</span>
-              </div>
-            ` : ''}
-            ${member.recent3Result ? `
-              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p class="font-medium">${member.recent3Event || '--'}</p>
-                  <p class="text-xs text-gray-500">${member.recent3Date || '--'}</p>
-                </div>
-                <span class="font-semibold text-primary">${member.recent3Result}</span>
-              </div>
-            ` : ''}
-            ${!member.recent1Result && !member.recent2Result && !member.recent3Result ? '<p class="text-gray-500 text-center py-4">暂无近期比赛记录</p>' : ''}
-          </div>
-        </div>
-      `;
-      
-      modal.classList.remove('hidden');
-    }
+                const rows = text.split('\n').slice(1);
+                // 倒序显示（最新的在最上面）
+                rows.reverse().forEach(row => {
+                    if(!row.trim()) return;
+                    // 解析 CSV (注意：如果内容里有逗号，这里的简单 split 会有问题，建议内容不要含英文逗号)
+                    const c = row.split(',');
+                    // 假设CSV结构: id, name, content, time, tag
+                    
+                    if(c.length < 3) return;
 
-    // 加载示例数据
-    function loadSampleData() {
-      // 示例数据（从您提供的表格中提取）
-      const sampleData = `序号,姓名,赞助类别,全马成绩,赛事年份&名称,半马成绩,赛事年份&名称,10K成绩,赛事年份&名称,性别,入学年份,所学专业,联系电话,成绩1,赛事名称1,比赛时间1,成绩2,赛事名称2,比赛时间2,成绩3,赛事名称3,比赛时间3
-填写示例,XXX,,3:00:00,2025年重庆马拉松,1:20:00,2025年重半马,45:00:00,2025年重庆10K,,,,,全马3:00:00,2025年重庆马拉松,2025年3月24日,半马1:20:00,重庆长嘉汇半程马拉松,2025年11月2日,10km36:00,重庆长嘉汇10km,2025年11月15日
-1,刘冠睿,,,,,1:23:22,2025长嘉汇半马,38:13:00,2025重庆10k,男,2024,材料成型及控制工程,13933760321,半马1:23:52,2025永川半马,2025年3月16日,半马1:23:
+                    const name = c[1];
+                    const content = c[2];
+                    const time = c[3];
+                    const tag = c[4] ? c[4].trim() : '加油';
+
+                    // 根据标签决定颜色类名
+                    let tagClass = 'tag-cheer';
+                    if(tag === '提问') tagClass = 'tag-ask';
+                    if(tag === '暖心' || tag === '膜拜') tagClass = 'tag-love';
+
+                    const html = `
+                    <div class="msg-card">
+                        <span class="msg-tag ${tagClass}"># ${tag}</span>
+                        <div class="msg-content">${content}</div>
+                        <div class="msg-footer">
+                            <span>@ ${name}</span>
+                            <span>${time}</span>
+                        </div>
+                    </div>`;
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+            } catch(e) {
+                document.getElementById('messageGrid').innerHTML = '<div class="empty-tip">还没有留言，快去上传 messages.csv 吧！</div>';
+            }
+        }
+    </script>
+</body>
+</html>
