@@ -216,35 +216,146 @@
             }
         }
 
-        // --- 逻辑1：加载队员 (data.csv) ---
+                // --- 逻辑1：加载队员 (data.csv) ---
+                /* ============================================================
+           XSimple 优化：成绩智能排序算法
+           逻辑：全马 -> 半马 -> 10k (升序，越快越前)
+           ============================================================ */
+        
         async function loadMembers() {
             try {
                 const res = await fetch('data.csv');
-                if(!res.ok) throw new Error("404");
-                const text = await res.text();
+                if (!res.ok) throw new Error("404");
+                let text = await res.text();
+                
+                // 1. 解决 UTF-8 BOM 乱码问题
+                if (text.charCodeAt(0) === 0xFEFF) {
+                    text = text.slice(1);
+                }
+        
                 const container = document.getElementById('memberGrid');
                 container.innerHTML = '';
-                
-                const rows = text.split('\n').slice(1); // 去表头
+        
+                const rows = text.split('\n').slice(1); // 去掉表头
+                let members = [];
+        
+                // 2. 解析 CSV 为对象数组
                 rows.forEach(row => {
-                    if(!row.trim()) return;
+                    if (!row.trim()) return;
+                    // 处理 CSV 中的逗号，简单的 split 逻辑
                     const c = row.split(',');
-                    // 1:姓名, 3:全马, 5:半马, 7:10K, 9:性别, 10:年, 11:专业
+                    
+                    // 数据映射：根据您的 CSV 结构
+                    // c[1]:姓名, c[3]:全马, c[5]:半马, c[7]:10K, c[9]:性别, c[10]:级, c[11]:专业
+                    const memberObj = {
+                        raw: c, // 保存原始数据用于渲染
+                        name: c[1],
+                        // 计算秒数权重：有成绩按实际秒数，无成绩设为无穷大(Infinity)
+                        tFull: parseSeconds(c[3]), 
+                        tHalf: parseSeconds(c[5]),
+                        t10k:  parseSeconds(c[7])
+                    };
+                    members.push(memberObj);
+                });
+        
+                // 3. 核心排序逻辑 (全马 -> 半马 -> 10k)
+                members.sort((a, b) => {
+                    // 优先比较全马
+                    if (a.tFull !== b.tFull) {
+                        return a.tFull - b.tFull; // 升序：小的时间在前
+                    }
+                    // 全马相同（或都没有），比较半马
+                    if (a.tHalf !== b.tHalf) {
+                        return a.tHalf - b.tHalf;
+                    }
+                    // 半马也相同，比较 10k
+                    return a.t10k - b.t10k;
+                });
+        
+                // 4. 渲染排序后的列表
+                members.forEach(m => {
+                    const c = m.raw;
+                    // 姓名处理
+                    const name = c[1] || '未知';
+                    // 成绩文本处理（如果无成绩显示 -）
+                    const strFull = cleanText(c[3]);
+                    const strHalf = cleanText(c[5]);
+                    const str10k  = cleanText(c[7]);
+        
                     const html = `
-                    <div class="card">
+                    <div class="card" data-search="${name} ${c[11]} ${c[10]}">
                         <div class="card-header">
-                            <span class="member-name">${c[1]}</span>
-                            <span class="member-meta">${c[10]}级 · ${c[11]}</span>
+                            <div>
+                                <div class="member-name">${name}</div>
+                                <div class="member-meta">${c[10]||''}级 · ${c[11]||''}</div>
+                            </div>
+                            <!-- (可选) 这里可以加排名数字 -->
                         </div>
                         <div class="stats-grid">
-                            <div class="stat-item"><div class="stat-label">10K</div><div class="stat-val col-green">${c[7]||'-'}</div></div>
-                            <div class="stat-item"><div class="stat-label">Half</div><div class="stat-val col-blue">${c[5]||'-'}</div></div>
-                            <div class="stat-item"><div class="stat-label">Full</div><div class="stat-val col-red">${c[3]||'-'}</div></div>
+                            <div class="stat-item">
+                                <div class="stat-label">10K</div>
+                                <div class="stat-value ${getColor(str10k, 'col-green')}">${str10k}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Half</div>
+                                <div class="stat-value ${getColor(strHalf, 'col-blue')}">${strHalf}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Full</div>
+                                <div class="stat-value ${getColor(strFull, 'col-red')}">${strFull}</div>
+                            </div>
                         </div>
                     </div>`;
                     container.insertAdjacentHTML('beforeend', html);
                 });
-            } catch(e) { console.log('Member CSV missing'); }
+        
+            } catch (e) {
+                console.error(e);
+                document.getElementById('memberGrid').innerHTML = '<div class="error-box">数据加载失败，请检查 data.csv 格式</div>';
+            }
+        }
+        
+        // ------ 辅助工具函数 ------
+        
+        // 将时间字符串 "3:30:00" 转换为秒数，用于比较
+        function parseSeconds(timeStr) {
+            if (!timeStr || timeStr.trim() === '' || timeStr.trim() === '无' || timeStr.trim() === '-') {
+                return 9999999; // 无成绩给一个极大值，排在最后
+            }
+            
+            // 统一格式处理：将中文冒号替换为英文
+            const cleanStr = timeStr.trim().replace('：', ':');
+            const parts = cleanStr.split(':').map(Number);
+            
+            let seconds = 0;
+            // 格式 HH:MM:SS
+            if (parts.length === 3) {
+                seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+            }
+            // 格式 MM:SS (通常是10k不带小时) 或者 HH:MM
+            else if (parts.length === 2) {
+                // 简单的启发式判断：如果第一位数字大于5，通常认为是分钟(10k)，否则可能是小时
+                // 但为了严谨，建议 Excel 里统一 recording 格式为 HH:MM:SS
+                // 这里默认按 HH:MM 处理，或者统统转为秒
+                seconds = parts[0] * 3600 + parts[1] * 60; 
+            }
+            // 格式 SS (几乎不可能)
+            else if (parts.length === 1) {
+                seconds = parts[0];
+            }
+            
+            return seconds || 9999999; // 防止 NaN
+        }
+        
+        // 清理显示文本
+        function cleanText(str) {
+            if (!str || str.trim() === '' || str.trim() === '无') return '-';
+            return str.trim();
+        }
+        
+        // 获取颜色样式
+        function getColor(val, colorClass) {
+            return val === '-' ? 'val-none' : colorClass;
         }
 
         // --- 逻辑2：加载留言 (messages.csv) ---
@@ -294,6 +405,7 @@
     </script>
 </body>
 </html>
+
 
 
 
