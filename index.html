@@ -81,7 +81,8 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .card { background: #fff; padding: 24px; border-radius: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: transform 0.2s; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-        .card-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+         /*.card-header { display: flex; justify-content: space-between; margin-bottom: 15px; }*/
+        .card-header {display: flex; align-items: center; gap: 15px; margin-bottom: 12px; }
         .member-name { font-size: 20px; font-weight: 600; }
         .member-meta { font-size: 13px; color: var(--text-secondary); }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding-top: 15px; border-top: 1px solid #eee; }
@@ -89,6 +90,16 @@
         .stat-val { font-weight: 600; font-size: 15px; }
         .stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
         .col-red { color: #ff3b30; } .col-blue { color: #0071e3; } .col-green { color: #34c759; }
+        .avatar { 
+    width: 50px;            /* 头像宽度 */
+    height: 50px;           /* 头像高度 */
+    border-radius: 50%;     /* 变成正圆形 */
+    object-fit: cover;      /* 保持比例，裁切多余部分，防变形 */
+    border: 2px solid #fff; /* 加个白边更好看 */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 加一点阴影 */
+    background-color: #eee; /* 图片未加载时的背景色 */
+    flex-shrink: 0;         /* 防止名字太长把头像挤扁 */
+}
 
         /* ---------- 应援墙样式 (新增的) ---------- */
         .wall-header {
@@ -223,75 +234,92 @@
            逻辑：全马 -> 半马 -> 10k (升序，越快越前)
            ============================================================ */
         
+       /* ============================================================
+   XSimple 核心逻辑：成员加载 + 智能排序 + 头像显示
+   ============================================================ */
+
         async function loadMembers() {
             try {
+                console.log("XSimple: 开始加载数据...");
                 const res = await fetch('data.csv');
-                if (!res.ok) throw new Error("404");
+                if (!res.ok) throw new Error("无法读取 data.csv (404)");
+                
                 let text = await res.text();
                 
-                // 1. 解决 UTF-8 BOM 乱码问题
+                // 1. 剔除 UTF-8 BOM 标记 (防止第一行乱码)
                 if (text.charCodeAt(0) === 0xFEFF) {
                     text = text.slice(1);
                 }
         
                 const container = document.getElementById('memberGrid');
-                container.innerHTML = '';
+                container.innerHTML = ''; // 清空容器
         
                 const rows = text.split('\n').slice(1); // 去掉表头
                 let members = [];
         
-                // 2. 解析 CSV 为对象数组
+                // 2. 解析每行数据
                 rows.forEach(row => {
-                    if (!row.trim()) return;
-                    // 处理 CSV 中的逗号，简单的 split 逻辑
-                    const c = row.split(',');
+                    if (!row.trim()) return; // 跳过空行
+                    const c = row.split(','); // 简单按逗号分割
                     
-                    // 数据映射：根据您的 CSV 结构
-                    // c[1]:姓名, c[3]:全马, c[5]:半马, c[7]:10K, c[9]:性别, c[10]:级, c[11]:专业
+                    // 数据安全检查
+                    if (c.length < 2) return;
+        
+                    // --- 头像逻辑 ---
+                    // 假设头像文件名放在 CSV 的【最后一列】
+                    // 如果只有12列，它取第12列；如果有13列，它取第13列，非常灵活。
+                    let imgFile = c[c.length - 1] ? c[c.length - 1].trim() : '';
+                    
+                    // 如果 CSV 里没填，或者填的是"无"，使用默认图
+                    if (!imgFile || imgFile === '无' || imgFile === '-') {
+                        imgFile = 'default.png';
+                    }
+                    
+                    // 构建对象
                     const memberObj = {
-                        raw: c, // 保存原始数据用于渲染
+                        raw: c, 
                         name: c[1],
-                        // 计算秒数权重：有成绩按实际秒数，无成绩设为无穷大(Infinity)
+                        // 计算排序权重 (秒数)
                         tFull: parseSeconds(c[3]), 
                         tHalf: parseSeconds(c[5]),
-                        t10k:  parseSeconds(c[7])
+                        t10k:  parseSeconds(c[7]),
+                        avatar: `images/${imgFile}` // 拼接路径
                     };
                     members.push(memberObj);
                 });
         
-                // 3. 核心排序逻辑 (全马 -> 半马 -> 10k)
+                // 3. 执行排序 (全马 -> 半马 -> 10k)
                 members.sort((a, b) => {
-                    // 优先比较全马
-                    if (a.tFull !== b.tFull) {
-                        return a.tFull - b.tFull; // 升序：小的时间在前
-                    }
-                    // 全马相同（或都没有），比较半马
-                    if (a.tHalf !== b.tHalf) {
-                        return a.tHalf - b.tHalf;
-                    }
-                    // 半马也相同，比较 10k
+                    if (a.tFull !== b.tFull) return a.tFull - b.tFull;
+                    if (a.tHalf !== b.tHalf) return a.tHalf - b.tHalf;
                     return a.t10k - b.t10k;
                 });
         
-                // 4. 渲染排序后的列表
+                // 4. 渲染 HTML
                 members.forEach(m => {
                     const c = m.raw;
-                    // 姓名处理
                     const name = c[1] || '未知';
-                    // 成绩文本处理（如果无成绩显示 -）
+                    
+                    // 成绩文本处理
                     const strFull = cleanText(c[3]);
                     const strHalf = cleanText(c[5]);
                     const str10k  = cleanText(c[7]);
         
+                    // 生成卡片 HTML
                     const html = `
-                    <div class="card" data-search="${name} ${c[11]} ${c[10]}">
+                    <div class="card" data-search="${name} ${c[11]||''} ${c[10]||''}">
                         <div class="card-header">
+                            <!-- 头像部分 -->
+                            <img src="${m.avatar}" class="avatar" alt="头像" 
+                                 onerror="this.onerror=null;this.src='images/default.png';">
+                            
+                            <!-- 姓名信息部分 -->
                             <div>
                                 <div class="member-name">${name}</div>
                                 <div class="member-meta">${c[10]||''}级 · ${c[11]||''}</div>
                             </div>
-                            <!-- (可选) 这里可以加排名数字 -->
                         </div>
+                        
                         <div class="stats-grid">
                             <div class="stat-item">
                                 <div class="stat-label">10K</div>
@@ -311,46 +339,37 @@
                 });
         
             } catch (e) {
-                console.error(e);
-                document.getElementById('memberGrid').innerHTML = '<div class="error-box">数据加载失败，请检查 data.csv 格式</div>';
+                console.error("加载出错:", e);
+                document.getElementById('memberGrid').innerHTML = 
+                    '<div style="text-align:center;padding:20px;color:red;">数据加载异常，请检查 data.csv 格式</div>';
             }
         }
         
-        // ------ 辅助工具函数 ------
+        // ------ 辅助函数 (必须包含在 script 中) ------
         
-        // 将时间字符串 "3:30:00" 转换为秒数，用于比较
+        // 将时间转换为秒 (用于比较)
         function parseSeconds(timeStr) {
-            if (!timeStr || timeStr.trim() === '' || timeStr.trim() === '无' || timeStr.trim() === '-') {
-                return 9999999; // 无成绩给一个极大值，排在最后
-            }
+            // 9999999 代表无穷大，让没成绩的人排在最后
+            if (!timeStr ||  ['无', '-', ''].includes(timeStr.trim())) return 9999999;
             
-            // 统一格式处理：将中文冒号替换为英文
+            // 兼容中文冒号
             const cleanStr = timeStr.trim().replace('：', ':');
             const parts = cleanStr.split(':').map(Number);
             
             let seconds = 0;
-            // 格式 HH:MM:SS
-            if (parts.length === 3) {
+            if (parts.length === 3) { // HH:MM:SS
                 seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-            }
-            // 格式 MM:SS (通常是10k不带小时) 或者 HH:MM
-            else if (parts.length === 2) {
-                // 简单的启发式判断：如果第一位数字大于5，通常认为是分钟(10k)，否则可能是小时
-                // 但为了严谨，建议 Excel 里统一 recording 格式为 HH:MM:SS
-                // 这里默认按 HH:MM 处理，或者统统转为秒
+            } else if (parts.length === 2) { // HH:MM (简单处理)
                 seconds = parts[0] * 3600 + parts[1] * 60; 
-            }
-            // 格式 SS (几乎不可能)
-            else if (parts.length === 1) {
+            } else {
                 seconds = parts[0];
             }
-            
-            return seconds || 9999999; // 防止 NaN
+            return seconds || 9999999;
         }
         
         // 清理显示文本
         function cleanText(str) {
-            if (!str || str.trim() === '' || str.trim() === '无') return '-';
+            if (!str || ['无', ''].includes(str.trim())) return '-';
             return str.trim();
         }
         
@@ -406,6 +425,7 @@
     </script>
 </body>
 </html>
+
 
 
 
