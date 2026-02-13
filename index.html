@@ -73,9 +73,42 @@
         }
 
         /* 英雄榜样式 */
-        .hero-header { text-align: center; margin-bottom: 40px; }
+        .hero-header { text-align: center; margin-bottom: 30px; }
         .hero-logo { width: 120px; height: 120px; border-radius: 20%; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin-bottom: 15px; }
         h1 { margin: 0; font-size: 32px; font-weight: 700; }
+
+        /* 排序按钮样式 */
+        .sort-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .sort-btn {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 8px 20px;
+            border-radius: 99px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .sort-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .sort-btn.active {
+            background: var(--accent-blue);
+            color: #fff;
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 12px rgba(0,113,227,0.3);
+        }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .card { background: #fff; padding: 24px; border-radius: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: transform 0.2s; }
@@ -137,6 +170,13 @@
         <div class="hero-header">
             <img src="https://raw.githubusercontent.com/haochuanpeng/CQU-ymsz-pages/main/logo.jpg" class="hero-logo">
             <h1>野蛮生长 · 英雄榜</h1>
+            
+            <!-- 新增排序按钮容器 -->
+            <div class="sort-container">
+                <button id="btn-sort-full" class="sort-btn active" onclick="handleSort('full')">按全马排序</button>
+                <button id="btn-sort-half" class="sort-btn" onclick="handleSort('half')">按半马排序</button>
+                <button id="btn-sort-10k" class="sort-btn" onclick="handleSort('10k')">按10k排序</button>
+            </div>
         </div>
         <div class="grid" id="memberGrid"></div>
     </div>
@@ -180,7 +220,7 @@
             if(tabName === 'photos') renderPhotoWall();
         }
 
-        /* 逻辑1：加载及排序 */
+        /* 加载队员数据 */
         async function loadMembers() {
             try {
                 const res = await fetch('data.csv');
@@ -202,7 +242,6 @@
                         t10k: c[7] || '-',
                         grade: c[10] || '',
                         major: c[11] || '',
-                        // 排序用秒数
                         sFull: parseSec(c[3]),
                         sHalf: parseSec(c[5]),
                         s10k:  parseSec(c[7]),
@@ -211,17 +250,46 @@
                     allMembers.push(m);
                 });
 
-                // 严格排序核心：全马 -> 半马 -> 10k
-                allMembers.sort((a, b) => {
-                    if (a.sFull !== b.sFull) return a.sFull - b.sFull;
-                    if (a.sHalf !== b.sHalf) return a.sHalf - b.sHalf;
-                    return a.s10k - b.s10k;
-                });
-
+                // 默认初始化：按全程马拉松排序
+                performSort('full');
                 renderHeroList();
             } catch (e) {
                 console.error(e);
             }
+        }
+
+        /* 外部调用的排序处理（更新UI高亮） */
+        function handleSort(type) {
+            // 更新按钮样式
+            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+            if(type === 'full') document.getElementById('btn-sort-full').classList.add('active');
+            if(type === 'half') document.getElementById('btn-sort-half').classList.add('active');
+            if(type === '10k')  document.getElementById('btn-sort-10k').classList.add('active');
+
+            performSort(type);
+            renderHeroList();
+        }
+
+        /* 核心排序逻辑 */
+        function performSort(type) {
+            allMembers.sort((a, b) => {
+                if (type === 'full') {
+                    // 默认排序优先级：全程 -> 半程 -> 10k
+                    if (a.sFull !== b.sFull) return a.sFull - b.sFull;
+                    if (a.sHalf !== b.sHalf) return a.sHalf - b.sHalf;
+                    return a.s10k - b.s10k;
+                } else if (type === 'half') {
+                    // 半程排序优先级：半程 -> 全程 -> 10k
+                    if (a.sHalf !== b.sHalf) return a.sHalf - b.sHalf;
+                    if (a.sFull !== b.sFull) return a.sFull - b.sFull;
+                    return a.s10k - b.s10k;
+                } else if (type === '10k') {
+                    // 10k排序优先级：10k -> 全程 -> 半程
+                    if (a.s10k !== b.s10k) return a.s10k - b.s10k;
+                    if (a.sFull !== b.sFull) return a.sFull - b.sFull;
+                    return a.sHalf - b.sHalf;
+                }
+            });
         }
 
         function renderHeroList() {
