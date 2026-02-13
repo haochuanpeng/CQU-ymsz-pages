@@ -26,7 +26,7 @@
             min-height: 100vh;
         }
 
-        /* 顶部导航 - 三位切换 */
+        /* 顶部导航 */
         .nav-container {
             background: rgba(255,255,255,0.8);
             backdrop-filter: blur(20px);
@@ -57,13 +57,14 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        /* 页面显示切换 */
+        /* 页面容器 */
         .page-section {
             display: none;
             width: 100%;
             max-width: 1000px;
             animation: fadeIn 0.5s ease;
         }
+
         .page-section.active { display: block; }
 
         @keyframes fadeIn {
@@ -71,67 +72,60 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 公用标题样式 */
-        .page-header { text-align: center; margin-bottom: 40px; }
-        .hero-logo { width: 120px; height: 120px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        /* 英雄榜样式 */
+        .hero-header { text-align: center; margin-bottom: 40px; }
+        .hero-logo { width: 120px; height: 120px; border-radius: 20%; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin-bottom: 15px; }
         h1 { margin: 0; font-size: 32px; font-weight: 700; }
 
-        /* ---------- 英雄榜样式 ---------- */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .card { background: #fff; padding: 24px; border-radius: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: transform 0.2s; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        
         .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; }
-        .avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex-shrink: 0; }
+        .avatar { 
+            width: 55px; height: 55px; border-radius: 50%; object-fit: cover; 
+            border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex-shrink: 0; 
+        }
         .member-name { font-size: 20px; font-weight: 600; }
         .member-meta { font-size: 13px; color: var(--text-secondary); }
+
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding-top: 15px; border-top: 1px solid #eee; }
         .stat-item { text-align: center; }
         .stat-val { font-weight: 600; font-size: 15px; }
         .stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
         .col-red { color: #ff3b30; } .col-blue { color: #0071e3; } .col-green { color: #34c759; }
 
-        /* ---------- 照片墙样式 (新加) ---------- */
+        /* 照片墙样式 */
         .photo-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 20px;
         }
         .photo-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-            text-align: center;
-            transition: all 0.3s ease;
+            background: #fff; border-radius: 18px; overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04); text-align: center;
         }
-        .photo-card img {
-            width: 100%;
-            height: 220px;
-            object-fit: cover;
-            display: block;
-        }
-        .photo-info { padding: 15px; }
-        .p-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
-        .p-desc { font-size: 12px; color: var(--text-secondary); }
+        .photo-card img { width: 100%; height: 180px; object-fit: cover; }
+        .photo-info { padding: 12px; }
+        .p-name { font-weight: 700; font-size: 15px; }
+        .p-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
-        /* ---------- 应援留言样式 ---------- */
-        .wall-btn { background: var(--accent-blue); color: white; padding: 12px 28px; border-radius: 99px; text-decoration: none; font-size: 15px; font-weight: 600; display: inline-block; box-shadow: 0 4px 10px rgba(0,113,227,0.3); transition: transform 0.2s; }
+        /* 应援墙样式 */
+        .wall-btn {
+            background: var(--accent-blue); color: white; padding: 10px 24px;
+            border-radius: 99px; text-decoration: none; font-size: 14px; font-weight: 600;
+            display: inline-block; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,113,227,0.3);
+        }
         .message-grid { column-count: 2; column-gap: 20px; margin-top: 30px; }
         @media (max-width: 600px) { .message-grid { column-count: 1; } }
-        .msg-card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 20px; break-inside: avoid; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); }
+        .msg-card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 20px; break-inside: avoid; }
         .msg-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-bottom: 10px; }
         .tag-cheer { background: #fff5e5; color: var(--accent-orange); }
-        .tag-ask { background: #e5f1ff; color: var(--accent-blue); }
-        .tag-love { background: #ffe5e5; color: #ff3b30; }
-        .msg-content { font-size: 16px; line-height: 1.5; color: var(--text-primary); margin-bottom: 15px; }
-        .msg-footer { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); }
-        
-        .empty-tip { text-align: center; color: var(--text-secondary); margin-top: 50px; }
     </style>
 </head>
 <body>
 
-    <!-- 顶部导航 -->
+    <!-- 顶部开关 -->
     <div class="nav-container">
         <div class="nav-item active" onclick="switchTab('hero')">英雄榜</div>
         <div class="nav-item" onclick="switchTab('photos')">照片墙</div>
@@ -140,35 +134,33 @@
 
     <!-- 页面1：英雄榜 -->
     <div id="page-hero" class="page-section active">
-        <div class="page-header">
+        <div class="hero-header">
             <img src="https://raw.githubusercontent.com/haochuanpeng/CQU-ymsz-pages/main/TBRC.jpg" class="hero-logo">
-            <h1>野蛮生长 · 英雄榜</h1>
+            <h1>野蛮生长 · 成员榜</h1>
         </div>
         <div class="grid" id="memberGrid"></div>
     </div>
 
     <!-- 页面2：照片墙 -->
     <div id="page-photos" class="page-section">
-        <div class="page-header">
-            <h1>队员风采</h1>
-            <p style="color:var(--text-secondary)">每一步都是对自我的超越</p>
+        <div class="hero-header">
+            <h1>跑友风采</h1>
+            <p style="color:var(--text-secondary)">所有的伟大，都源于一个勇敢的开始</p>
         </div>
         <div class="photo-grid" id="photoWallGrid"></div>
     </div>
 
-    <!-- 页面3：应援留言 -->
+    <!-- 页面3：应援墙 -->
     <div id="page-wall" class="page-section">
-        <div class="page-header">
-            <h1>留言板</h1>
-            <p style="color:var(--text-secondary); margin-bottom:20px;">只要还在跑，我们就永远年轻。</p>
-            <a href="https://v.wjx.cn/vm/mGNFr4R.aspx" target="_blank" class="wall-btn">✍️ 我要留言</a>
+        <div class="hero-header">
+            <h1>应援留言板</h1>
+            <a href="https://v.wjx.cn/vm/mGNFr4R.aspx" target="_blank" class="wall-btn">✍️ 我要留言 (投稿)</a>
         </div>
         <div class="message-grid" id="messageGrid"></div>
     </div>
 
     <script>
-        // 全局存储数据，避免重复读取
-        let allMembersData = [];
+        let allMembers = [];
 
         window.onload = function() {
             loadMembers();
@@ -176,76 +168,64 @@
         };
 
         function switchTab(tabName) {
-            // 样式处理
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
 
-            // 激活逻辑
-            const targetBtn = Array.from(document.querySelectorAll('.nav-item')).find(el => el.innerText.includes(getTabTitle(tabName)));
-            if (targetBtn) targetBtn.classList.add('active');
+            if(tabName === 'hero') document.querySelectorAll('.nav-item')[0].classList.add('active');
+            else if(tabName === 'photos') document.querySelectorAll('.nav-item')[1].classList.add('active');
+            else document.querySelectorAll('.nav-item')[2].classList.add('active');
+
             document.getElementById('page-' + tabName).classList.add('active');
-
-            // 如果切换到照片墙，渲染内容
-            if (tabName === 'photos') renderPhotoWall();
+            
+            if(tabName === 'photos') renderPhotoWall();
         }
 
-        function getTabTitle(name) {
-            if(name === 'hero') return '英雄榜';
-            if(name === 'photos') return '照片墙';
-            return '应援留言';
-        }
-
-        /* 核心逻辑：加载并排序队员 */
+        /* 逻辑1：加载及排序 */
         async function loadMembers() {
             try {
                 const res = await fetch('data.csv');
                 let text = await res.text();
                 if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-        
+                
                 const rows = text.split('\n').slice(1);
-                allMembersData = [];
-        
+                allMembers = [];
+
                 rows.forEach(row => {
                     if (!row.trim()) return;
                     const c = row.split(',');
-                    if (c.length < 2) return;
+                    const imgFile = (c[c.length - 1] || 'default.png').trim();
 
-                    // 头像文件名约定在最后一列
-                    let imgFileName = c[c.length - 1] ? c[c.length-1].trim() : 'default.png';
-                    if(!imgFileName || imgFileName === '无') imgFileName = 'default.png';
-
-                    const member = {
-                        name: c[1],
-                        grade: c[10] || '',
-                        major: c[11] || '',
+                    const m = {
+                        name: c[1] || '跑友',
                         full: c[3] || '-',
                         half: c[5] || '-',
                         t10k: c[7] || '-',
-                        tFullSec: parseSeconds(c[3]),
-                        tHalfSec: parseSeconds(c[5]),
-                        t10kSec:  parseSeconds(c[7]),
-                        avatar: `images/${imgFileName}`
+                        grade: c[10] || '',
+                        major: c[11] || '',
+                        // 排序用秒数
+                        sFull: parseSec(c[3]),
+                        sHalf: parseSec(c[5]),
+                        s10k:  parseSec(c[7]),
+                        avatar: `images/${imgFile === '无' ? 'default.png' : imgFile}`
                     };
-                    allMembersData.push(member);
+                    allMembers.push(m);
                 });
 
-                // 智能排序
-                allMembersData.sort((a, b) => {
-                    if (a.tFullSec !== b.tFullSec) return a.tFullSec - b.tFullSec;
-                    if (a.tHalfSec !== b.tHalfSec) return a.tHalfSec - b.tHalfSec;
-                    return a.t10kSec - b.t10kSec;
+                // 严格排序核心：全马 -> 半马 -> 10k
+                allMembers.sort((a, b) => {
+                    if (a.sFull !== b.sFull) return a.sFull - b.sFull;
+                    if (a.sHalf !== b.sHalf) return a.sHalf - b.sHalf;
+                    return a.s10k - b.s10k;
                 });
 
-                renderMemberCards();
+                renderHeroList();
             } catch (e) {
-                document.getElementById('memberGrid').innerHTML = '<div class="empty-tip">Excel 数据读取失败</div>';
+                console.error(e);
             }
         }
 
-        /* 渲染英雄榜卡片 */
-        function renderMemberCards() {
-            const container = document.getElementById('memberGrid');
-            container.innerHTML = allMembersData.map(m => `
+        function renderHeroList() {
+            document.getElementById('memberGrid').innerHTML = allMembers.map(m => `
                 <div class="card">
                     <div class="card-header">
                         <img src="${m.avatar}" class="avatar" onerror="this.src='images/default.png'">
@@ -263,53 +243,43 @@
             `).join('');
         }
 
-        /* 渲染照片墙 */
         function renderPhotoWall() {
             const container = document.getElementById('photoWallGrid');
-            if (container.innerHTML !== "") return; // 避免重复生成
-
-            container.innerHTML = allMembersData.map(m => `
+            if(container.innerHTML !== "") return;
+            container.innerHTML = allMembers.map(m => `
                 <div class="photo-card">
                     <img src="${m.avatar}" loading="lazy" onerror="this.src='images/default.png'">
                     <div class="photo-info">
                         <div class="p-name">${m.name}</div>
-                        <div class="p-desc">${m.grade}级 · ${m.major}</div>
+                        <div class="p-meta">${m.grade}级 · ${m.major}</div>
                     </div>
                 </div>
             `).join('');
         }
 
-        /* 加载留言 */
         async function loadMessages() {
             try {
                 const res = await fetch('messages.csv');
                 const text = await res.text();
-                const container = document.getElementById('messageGrid');
                 const rows = text.split('\n').slice(1).reverse();
-                
-                container.innerHTML = rows.map(row => {
-                    if(!row.trim()) return '';
+                document.getElementById('messageGrid').innerHTML = rows.map(row => {
                     const c = row.split(',');
-                    let tag = c[4] ? c[4].trim() : '加油';
-                    let tagClass = tag === '提问' ? 'tag-ask' : (tag === '暖心' ? 'tag-love' : 'tag-cheer');
+                    if(c.length < 3) return '';
                     return `
-                        <div class="msg-card">
-                            <span class="msg-tag ${tagClass}"># ${tag}</span>
-                            <div class="msg-content">${c[2]}</div>
-                            <div class="msg-footer"><span>@ ${c[1]}</span><span>${c[3]||''}</span></div>
-                        </div>`;
+                    <div class="msg-card">
+                        <span class="msg-tag tag-cheer"># 加油</span>
+                        <div class="msg-content">${c[2]}</div>
+                        <div class="msg-footer"><span>@ ${c[1]}</span><span>${c[3]||''}</span></div>
+                    </div>`;
                 }).join('');
-            } catch(e) {
-                document.getElementById('messageGrid').innerHTML = '<div class="empty-tip">暂无留言</div>';
-            }
+            } catch(e) {}
         }
 
-        /* 转换时间秒数 */
-        function parseSeconds(timeStr) {
-            if (!timeStr || ['无', '-', ''].includes(timeStr.trim())) return 9999999;
-            const parts = timeStr.trim().replace('：', ':').split(':').map(Number);
-            if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-            if (parts.length === 2) return parts[0] * 3600 + parts[1] * 60;
+        function parseSec(t) {
+            if(!t || ['-','无',''].includes(t.trim())) return 9999999;
+            const p = t.trim().replace('：',':').split(':').map(Number);
+            if(p.length === 3) return p[0]*3600 + p[1]*60 + p[2];
+            if(p.length === 2) return p[0]*3600 + p[1]*60;
             return 9999999;
         }
     </script>
